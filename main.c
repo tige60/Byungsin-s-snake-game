@@ -12,7 +12,14 @@
 void MoveCursor(int x, int y);
 
 // Forced to inject this DUMBASS parameter because the original code was never meant to be modular.
+// 오후 11:25 2026-06-20 In my think, it may be suitabler for "UpdateSnake" than DrawSnake
 void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing);
+
+void ChangeApplePos(POINT *apple_pos);
+
+void RemoveTail(POINT snake_tails[100], int apple);
+
+int IsSnakeEatApple(POINT apple_pos, POINT snake);
 
 HANDLE hwd;
 
@@ -22,9 +29,8 @@ int main()
 	int i;
 
 	POINT tmp1, tmp2;
-	POINT cursor;
-	POINT random;
-	POINT old_snake[10];
+	POINT apple_pos;
+	POINT snake_tails[100];
 	POINT snake;
 
 	int apple = 0;
@@ -33,15 +39,12 @@ int main()
 	snake.x = 10;
 	snake.y = 10;
 
-	random.x = rand() % 10;
-	random.y = rand() % 10;
+	apple_pos.x = rand() % 10;
+	apple_pos.y = rand() % 10;
 
 	hwd = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	srand(time(NULL));
-
-//	printf("random.x: %d\n", random.x);
-//	printf("random.y: %d\n", random.y);	
 
 	// wait "any key" (pause)
 	getch();
@@ -51,25 +54,28 @@ int main()
 	{
 		if (kbhit())
 		{
+			if ( IsSnakeEatApple(apple_pos, snake) ) 
+			{ apple++;
+			  ChangeApplePos(&apple_pos); }
 
-			MoveCursor(random.x, random.y);
+			MoveCursor(apple_pos.x, apple_pos.y);
 			printf("A");
 
-			tmp1 = old_snake[0];
-			old_snake[0] = snake;
+			tmp1 = snake_tails[0];
+			snake_tails[0] = snake;
 
-//			for (i=1; i<apple; i++)
-			for (i=1; i<10; i++)
+			for (i=1; i<apple+1; i++)
 			{
-				tmp2 = old_snake[i];
-				old_snake[i] = tmp1;
+				tmp2 = snake_tails[i];
+				snake_tails[i] = tmp1;
 				tmp1 = tmp2;
 			}
 
 			ch = getch();
 			if (ch == 224) { ch = getch(); }
 
-			DrawSnake(&snake, ch, &apple, &facing);	
+			DrawSnake(&snake, ch, &apple, &facing);
+			RemoveTail(snake_tails, apple);
 		}
 	}
 	
@@ -82,6 +88,21 @@ void MoveCursor(int x, int y)
 	cur.X = x;
 	cur.Y = y;
 	SetConsoleCursorPosition(hwd, cur);
+}
+
+int IsSnakeEatApple(POINT apple_pos, POINT snake)
+{
+	if (apple_pos.x == snake.x && apple_pos.y == apple_pos.y) 
+	{ return 1; }
+	else { return 0; }
+}
+
+void ChangeApplePos(POINT *apple_pos)
+{
+	MoveCursor(apple_pos->x, apple_pos->y);
+	putc(8, stdout);
+	apple_pos->x = rand() % 10;
+	apple_pos->y = rand() % 10;
 }
 
 void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing)
@@ -97,27 +118,18 @@ void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing)
 		if (snake->y == 0) { break; }
 		*facing = UP;
 	
-		MoveCursor(snake->x, snake->y + *apple);
-		printf(" ");
-	
 		snake->y--;
 		break;
 	
 	case DOWN:
 		*facing = DOWN;
 	
-		MoveCursor(snake->x, snake->y - *apple);
-		printf(" ");
-	
 		snake->y++;
 		break;
 				
 	case RIGHT:
-		*facing = RIGHT;
-	
-		MoveCursor(snake->x - *apple, snake->y);
-		printf(" ");
-	
+		*facing = RIGHT;	
+
 		snake->x++;
 		break;
 				
@@ -125,10 +137,7 @@ void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing)
 		if (snake->x == 0) { break; }
 	
 		*facing = LEFT;
-	
-		MoveCursor(snake->x + *apple, snake->y);
-		printf(" ");
-				
+					
 		snake->x--;
 		break;
 	default:
@@ -139,4 +148,11 @@ void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing)
 	MoveCursor(snake->x, snake->y);
 	printf("S");
 
+}
+
+void RemoveTail(POINT snake_tails[100], int apple)
+{
+	int i = apple;
+	MoveCursor(snake_tails[i].x , snake_tails[i].y);
+	printf(" ");
 }

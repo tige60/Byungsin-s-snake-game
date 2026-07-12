@@ -9,17 +9,24 @@
 #define RIGHT 77
 #define LEFT 75
 
+typedef struct _APPLE
+{
+	int cnt;
+	int x;
+	int y;
+}APPLE;
+
 void MoveCursor(int x, int y);
 
 // Forced to inject this DUMBASS parameter because the original code was never meant to be modular.
 // 오후 11:25 2026-06-20 In my think, it may be suitabler for "UpdateSnake" than DrawSnake
-void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing);
+void DrawSnake(POINT *snake, unsigned char ch, APPLE *apple, int *facing);
 
-void ChangeApplePos(POINT *apple_pos);
+void ChangeApplePos(APPLE *apple);
 
-void RemoveTail(POINT snake_tails[100], int apple);
+void RemoveTail(POINT snake_tails[100], APPLE *apple);
 
-int IsSnakeEatApple(POINT apple_pos, POINT snake);
+int IsSnakeEatApple(APPLE apple, POINT snake);
 
 HANDLE hwd;
 
@@ -29,18 +36,18 @@ int main()
 	int i;
 
 	POINT tmp1, tmp2;
-	POINT apple_pos;
 	POINT snake_tails[100];
 	POINT snake;
+	APPLE apple;
 
-	int apple = 0;
 	int facing = RIGHT;		// default
 	
 	snake.x = 10;
 	snake.y = 10;
 
-	apple_pos.x = rand() % 10;
-	apple_pos.y = rand() % 10;
+	apple.cnt = 0;
+	apple.x = rand() % 10;
+	apple.y = rand() % 10;
 
 	hwd = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -54,17 +61,24 @@ int main()
 	{
 		if (kbhit())
 		{
-			if ( IsSnakeEatApple(apple_pos, snake) ) 
-			{ apple++;
-			  ChangeApplePos(&apple_pos); }
+			// for debug
+			MoveCursor(0,0);
+			printf("apple: %d	appleX: %d	appleY: %d\n", apple.cnt, apple.x, apple.y);
+			printf("snakeX: %d	snakeY: %d\n", snake.x, snake.y);
+			
+			if ( IsSnakeEatApple(apple, snake) ) 
+			{ apple.cnt++;
+			  ChangeApplePos(&apple); }
 
-			MoveCursor(apple_pos.x, apple_pos.y);
+			SetConsoleTextAttribute(hwd, 12);
+			MoveCursor(apple.x, apple.y);
 			printf("A");
+			SetConsoleTextAttribute(hwd, 15);
 
 			tmp1 = snake_tails[0];
 			snake_tails[0] = snake;
 
-			for (i=1; i<apple+1; i++)
+			for (i=1; i<apple.cnt+1; i++)
 			{
 				tmp2 = snake_tails[i];
 				snake_tails[i] = tmp1;
@@ -75,7 +89,7 @@ int main()
 			if (ch == 224) { ch = getch(); }
 
 			DrawSnake(&snake, ch, &apple, &facing);
-			RemoveTail(snake_tails, apple);
+			RemoveTail(snake_tails, &apple);
 		}
 	}
 	
@@ -90,28 +104,28 @@ void MoveCursor(int x, int y)
 	SetConsoleCursorPosition(hwd, cur);
 }
 
-int IsSnakeEatApple(POINT apple_pos, POINT snake)
+int IsSnakeEatApple(APPLE apple, POINT snake)
 {
-	if (apple_pos.x == snake.x && apple_pos.y == apple_pos.y) 
+	if (apple.x == snake.x && apple.y == snake.y) 
 	{ return 1; }
 	else { return 0; }
 }
 
-void ChangeApplePos(POINT *apple_pos)
+void ChangeApplePos(APPLE *apple)
 {
-	MoveCursor(apple_pos->x, apple_pos->y);
+	MoveCursor(apple->x, apple->y);
 	putc(8, stdout);
-	apple_pos->x = rand() % 10;
-	apple_pos->y = rand() % 10;
+	apple->x = rand() % 10;
+	apple->y = rand() % 10;
 }
 
-void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing)
+void DrawSnake(POINT *snake, unsigned char ch, APPLE *apple, int *facing)
 {
 	switch(ch)
 	{
-	case 97:
+/*	case 97:
 		(*apple)++;
-		break;
+		break;		*/
 	case 27:
 		ExitProcess(0);
 	case UP:
@@ -145,14 +159,23 @@ void DrawSnake(POINT *snake, unsigned char ch, int *apple, int *facing)
 	}
 
 
-	MoveCursor(snake->x, snake->y);
-	printf("S");
-
+	if (apple->cnt == 0)
+	{
+		SetConsoleTextAttribute(hwd, 10);
+		MoveCursor(snake->x, snake->y);
+		printf("S");
+		SetConsoleTextAttribute(hwd, 15);
+	}
+	else
+	{
+		MoveCursor(snake->x, snake->y);
+		printf("S");
+	}
 }
 
-void RemoveTail(POINT snake_tails[100], int apple)
+void RemoveTail(POINT snake_tails[100], APPLE *apple)
 {
-	int i = apple;
+	int i = apple->cnt;
 	MoveCursor(snake_tails[i].x , snake_tails[i].y);
 	printf(" ");
 }

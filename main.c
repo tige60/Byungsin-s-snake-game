@@ -34,7 +34,6 @@ HANDLE hwd;
 
 int main()
 {
-	FILE *fp = NULL;
 	unsigned char ch = RIGHT;
 	int i;
 
@@ -57,8 +56,6 @@ int main()
 	// wait "any key" (pause)
 	getch();
 
-	fp = fopen("logfile.log", "r");
-
 	system("cls");
 	while(1)
 	{
@@ -66,10 +63,7 @@ int main()
 		{
 			if ( IsSnakeEatApple(apple, snake) ) 
 			{	apple.cnt++;
-				fprintf(fp, "%s %d", "apple: ", apple.cnt);
 				ChangeApplePos(&apple); }
-
-			fprintf(fp, "%s %d %d", "snake: ", snake.x, snake.y);
 
 			SetConsoleTextAttribute(hwd, 12);
 
@@ -77,6 +71,9 @@ int main()
 			printf("A");
 
 			SetConsoleTextAttribute(hwd, 15);
+
+			ch = getch();
+			if (ch == 224) { ch = getch(); }
 
 			tmp1 = snake_tails[0];
 			snake_tails[0] = snake;
@@ -88,22 +85,18 @@ int main()
 				tmp1 = tmp2;
 			}
 
-			ch = getch();
-			if (ch == 224) { ch = getch(); }
+			UpdateSnake(&snake, ch);
+			DrawSnake(&snake, ch); 
+			RemoveTail(snake_tails, &apple);
 
-
-/*			for (i=1; i < apple.cnt; i++)
+			for (i = 1; i <= apple.cnt; i++)
 			{
 				if (snake_tails[i].x == snake.x && snake_tails[i].y == snake.y)
 				{
 					printf("Game Over\n");
 					ExitProcess(0);
 				}
-			}*/
-
-			UpdateSnake(&snake, ch);
-			DrawSnake(&snake, ch); 
-			RemoveTail(snake_tails, &apple);
+			}
 		}
 	}
 	
@@ -131,27 +124,6 @@ void ChangeApplePos(APPLE *apple)
 	putc(8, stdout);
 	apple->x = rand() % 10;
 	apple->y = rand() % 10;
-}
-
-void DrawSnake(POINT *snake, unsigned char ch)
-{
-	MoveCursor(snake->x, snake->y);
-
-	switch(ch)
-	{
-	case RIGHT:
-		printf(">");
-		break;
-	case LEFT:
-		printf("<");
-		break;
-	case UP:
-		printf("^");
-		break;
-	case DOWN:
-		printf("v");
-		break;
-	}
 }
 
 void UpdateSnake(POINT *snake, unsigned char ch)
@@ -185,6 +157,27 @@ void UpdateSnake(POINT *snake, unsigned char ch)
 		break;
 	default:
 		return;
+	}
+}
+
+void DrawSnake(POINT *snake, unsigned char ch)
+{
+	MoveCursor(snake->x, snake->y);
+
+	switch(ch)
+	{
+	case RIGHT:
+		printf(">");
+		break;
+	case LEFT:
+		printf("<");
+		break;
+	case UP:
+		printf("^");
+		break;
+	case DOWN:
+		printf("v");
+		break;
 	}
 }
 

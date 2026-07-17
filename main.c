@@ -20,7 +20,9 @@ void MoveCursor(int x, int y);
 
 // Forced to inject this DUMBASS parameter because the original code was never meant to be modular.
 // 오후 11:25 2026-06-20 In my think, it may be suitabler for "UpdateSnake" than DrawSnake
-void DrawSnake(POINT *snake, unsigned char ch, APPLE *apple, int *facing);
+void DrawSnake(POINT *snake, unsigned char ch);
+
+void UpdateSnake(POINT *snake, unsigned char ch);
 
 void ChangeApplePos(APPLE *apple);
 
@@ -33,15 +35,13 @@ HANDLE hwd;
 int main()
 {
 	FILE *fp = NULL;
-	unsigned char ch;
+	unsigned char ch = RIGHT;
 	int i;
 
 	POINT tmp1, tmp2;
 	POINT snake_tails[100];
 	POINT snake;
 	APPLE apple;
-
-	int facing = RIGHT;		// default
 	
 	snake.x = 10;
 	snake.y = 10;
@@ -91,16 +91,18 @@ int main()
 			ch = getch();
 			if (ch == 224) { ch = getch(); }
 
-			for (i=1; i < apple.cnt; i++)
+
+/*			for (i=1; i < apple.cnt; i++)
 			{
 				if (snake_tails[i].x == snake.x && snake_tails[i].y == snake.y)
 				{
 					printf("Game Over\n");
 					ExitProcess(0);
 				}
-			}
+			}*/
 
-			DrawSnake(&snake, ch, &apple, &facing);
+			UpdateSnake(&snake, ch);
+			DrawSnake(&snake, ch); 
 			RemoveTail(snake_tails, &apple);
 		}
 	}
@@ -131,46 +133,8 @@ void ChangeApplePos(APPLE *apple)
 	apple->y = rand() % 10;
 }
 
-void DrawSnake(POINT *snake, unsigned char ch, APPLE *apple, int *facing)
+void DrawSnake(POINT *snake, unsigned char ch)
 {
-	switch(ch)
-	{
-/*	case 97:
-		(*apple)++;
-		break;		*/
-	case 27:
-		ExitProcess(0);
-	case UP:
-		if (snake->y == 0) { break; }
-		*facing = UP;
-	
-		snake->y--;
-		break;
-	
-	case DOWN:
-		*facing = DOWN;
-	
-		snake->y++;
-		break;
-				
-	case RIGHT:
-		*facing = RIGHT;	
-
-		snake->x++;
-		break;
-				
-	case LEFT:
-		if (snake->x == 0) { break; }
-	
-		*facing = LEFT;
-					
-		snake->x--;
-		break;
-	default:
-		return;
-	}
-
-
 	MoveCursor(snake->x, snake->y);
 
 	switch(ch)
@@ -187,6 +151,40 @@ void DrawSnake(POINT *snake, unsigned char ch, APPLE *apple, int *facing)
 	case DOWN:
 		printf("v");
 		break;
+	}
+}
+
+void UpdateSnake(POINT *snake, unsigned char ch)
+{
+	switch(ch)
+	{
+/*	case 97:
+		(*apple)++;
+		break;		*/
+	case 27:
+		ExitProcess(0);
+	case UP:
+		if (snake->y == 0) { break; }
+	
+		snake->y--;
+		break;
+	
+	case DOWN:
+
+		snake->y++;
+		break;
+				
+	case RIGHT:
+		snake->x++;
+		break;
+				
+	case LEFT:
+		if (snake->x == 0) { break; }
+				
+		snake->x--;
+		break;
+	default:
+		return;
 	}
 }
 

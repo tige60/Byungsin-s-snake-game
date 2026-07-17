@@ -32,6 +32,7 @@ HANDLE hwd;
 
 int main()
 {
+	FILE *fp = NULL;
 	unsigned char ch;
 	int i;
 
@@ -56,23 +57,25 @@ int main()
 	// wait "any key" (pause)
 	getch();
 
+	fp = fopen("logfile.log", "r");
+
 	system("cls");
 	while(1)
 	{
 		if (kbhit())
 		{
-			// for debug
-			MoveCursor(0,0);
-			printf("apple: %d	appleX: %d	appleY: %d\n", apple.cnt, apple.x, apple.y);
-			printf("snakeX: %d	snakeY: %d\n", snake.x, snake.y);
-			
 			if ( IsSnakeEatApple(apple, snake) ) 
-			{ apple.cnt++;
-			  ChangeApplePos(&apple); }
+			{	apple.cnt++;
+				fprintf(fp, "%s %d", "apple: ", apple.cnt);
+				ChangeApplePos(&apple); }
+
+			fprintf(fp, "%s %d %d", "snake: ", snake.x, snake.y);
 
 			SetConsoleTextAttribute(hwd, 12);
+
 			MoveCursor(apple.x, apple.y);
 			printf("A");
+
 			SetConsoleTextAttribute(hwd, 15);
 
 			tmp1 = snake_tails[0];
@@ -87,6 +90,15 @@ int main()
 
 			ch = getch();
 			if (ch == 224) { ch = getch(); }
+
+			for (i=1; i < apple.cnt; i++)
+			{
+				if (snake_tails[i].x == snake.x && snake_tails[i].y == snake.y)
+				{
+					printf("Game Over\n");
+					ExitProcess(0);
+				}
+			}
 
 			DrawSnake(&snake, ch, &apple, &facing);
 			RemoveTail(snake_tails, &apple);
@@ -159,17 +171,22 @@ void DrawSnake(POINT *snake, unsigned char ch, APPLE *apple, int *facing)
 	}
 
 
-	if (apple->cnt == 0)
+	MoveCursor(snake->x, snake->y);
+
+	switch(ch)
 	{
-		SetConsoleTextAttribute(hwd, 10);
-		MoveCursor(snake->x, snake->y);
-		printf("S");
-		SetConsoleTextAttribute(hwd, 15);
-	}
-	else
-	{
-		MoveCursor(snake->x, snake->y);
-		printf("S");
+	case RIGHT:
+		printf(">");
+		break;
+	case LEFT:
+		printf("<");
+		break;
+	case UP:
+		printf("^");
+		break;
+	case DOWN:
+		printf("v");
+		break;
 	}
 }
 

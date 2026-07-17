@@ -1,3 +1,3 @@
-REM @echo off
+@echo off
 
 tcc -g main.c -o main.exe

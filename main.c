@@ -50,6 +50,8 @@ int main(char argc, char* argv[])
 	POINT snake;
 	APPLE apple;
 	
+	ch = facing;
+
 	snake.x = 3;
 	snake.y = 3;
 
@@ -67,9 +69,13 @@ int main(char argc, char* argv[])
 	DrawJail(jail);
 	while(1)
 	{
-		if (kbhit())
-		{
-			if ( IsSnakeEatApple(apple, snake) ) 
+		//Let's make to auto move!
+		Sleep(100);
+
+
+		// THX gpt
+
+		if ( IsSnakeEatApple(apple, snake) ) 
 			{	apple.cnt++;
 				ChangeApplePos(&apple, snake_tails,jail); }
 
@@ -80,9 +86,12 @@ int main(char argc, char* argv[])
 
 			SetConsoleTextAttribute(hwd, 15);
 
-			//Let's make to auto move!
+		if (kbhit())
+		{
 			ch = getch();
 			if (ch == 224) { ch = getch(); }
+		}
+
 
 			tmp1 = snake_tails[0];
 			snake_tails[0] = snake;
@@ -116,7 +125,6 @@ int main(char argc, char* argv[])
 
 			DrawSnake(&snake, ch); 
 			RemoveTail(snake_tails, &apple);
-		}
 	}
 	
 	return 0;

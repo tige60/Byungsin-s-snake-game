@@ -38,6 +38,8 @@ HANDLE hwd;
 
 int main(char argc, char* argv[])
 {
+	// I hate Mathematics
+	int difficulty = 200 - (atoi(argv[2]) * 10);
 	int jail = atoi(argv[1]);
 	int facing = RIGHT;
 	unsigned char ch = RIGHT;
@@ -70,10 +72,7 @@ int main(char argc, char* argv[])
 	while(1)
 	{
 		//Let's make to auto move!
-		Sleep(100);
-
-
-		// THX gpt
+		Sleep(difficulty);
 
 		if ( IsSnakeEatApple(apple, snake) ) 
 			{	apple.cnt++;
@@ -86,6 +85,7 @@ int main(char argc, char* argv[])
 
 			SetConsoleTextAttribute(hwd, 15);
 
+		// THX gpt
 		if (kbhit())
 		{
 			ch = getch();

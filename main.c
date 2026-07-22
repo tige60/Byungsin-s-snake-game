@@ -18,38 +18,44 @@ typedef struct _APPLE
 
 void MoveCursor(int x, int y);
 
+void DrawJail(int jail);
+
 // Forced to inject this DUMBASS parameter because the original code was never meant to be modular.
-// 오후 11:25 2026-06-20 In my think, it may be suitabler for "UpdateSnake" than DrawSnake
+// 오후 11:25 2026-06-20 In my think, it may be suitabler for "UpdateSnake" than DrawSnak
 void DrawSnake(POINT *snake, unsigned char ch);
 
-void UpdateSnake(POINT *snake, unsigned char ch);
+void UpdateSnake(POINT *snake, unsigned char ch, int *facing);
 
-void ChangeApplePos(APPLE *apple);
+void ChangeApplePos(APPLE *apple, POINT snake_tails[100], int jail);
 
 void RemoveTail(POINT snake_tails[100], APPLE *apple);
 
 int IsSnakeEatApple(APPLE apple, POINT snake);
 
+void GameOver();
+
 HANDLE hwd;
 
-int main()
+int main(char argc, char* argv[])
 {
+	int jail = atoi(argv[1]);
+	int facing = RIGHT;
 	unsigned char ch = RIGHT;
 	int i;
+
+	hwd = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	POINT tmp1, tmp2;
 	POINT snake_tails[100];
 	POINT snake;
 	APPLE apple;
 	
-	snake.x = 10;
-	snake.y = 10;
+	snake.x = 3;
+	snake.y = 3;
 
 	apple.cnt = 0;
 	apple.x = rand() % 10;
 	apple.y = rand() % 10;
-
-	hwd = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	srand(time(NULL));
 
@@ -57,13 +63,15 @@ int main()
 	getch();
 
 	system("cls");
+
+	DrawJail(jail);
 	while(1)
 	{
 		if (kbhit())
 		{
 			if ( IsSnakeEatApple(apple, snake) ) 
 			{	apple.cnt++;
-				ChangeApplePos(&apple); }
+				ChangeApplePos(&apple, snake_tails,jail); }
 
 			SetConsoleTextAttribute(hwd, 12);
 
@@ -72,6 +80,7 @@ int main()
 
 			SetConsoleTextAttribute(hwd, 15);
 
+			//Let's make to auto move!
 			ch = getch();
 			if (ch == 224) { ch = getch(); }
 
@@ -85,18 +94,28 @@ int main()
 				tmp1 = tmp2;
 			}
 
-			UpdateSnake(&snake, ch);
-			DrawSnake(&snake, ch); 
-			RemoveTail(snake_tails, &apple);
+
+			UpdateSnake(&snake, ch, &facing);
 
 			for (i = 1; i <= apple.cnt; i++)
 			{
 				if (snake_tails[i].x == snake.x && snake_tails[i].y == snake.y)
 				{
-					printf("Game Over\n");
-					ExitProcess(0);
+					GameOver();
 				}
 			}
+
+			// IDK why cause a problem at ceiling so snake.y < 1
+			if (snake.x < 0 || snake.y < 1)
+			{
+				GameOver();
+			}
+
+			if (snake.x >= jail) { GameOver(); }
+			if ((snake.y+1) >= jail) { GameOver(); }
+
+			DrawSnake(&snake, ch); 
+			RemoveTail(snake_tails, &apple);
 		}
 	}
 	
@@ -118,15 +137,50 @@ int IsSnakeEatApple(APPLE apple, POINT snake)
 	else { return 0; }
 }
 
-void ChangeApplePos(APPLE *apple)
+void ChangeApplePos(APPLE *apple, POINT snake_tails[100], int jail)
 {
+	int i;
+	int overlap;
+/*
+	while (1) {
+		apple->x = rand() % (jail - 2) + 1;
+		apple->y = rand() % (jail - 2) + 1;
+		for (i = 1; i <= apple->cnt; i++)
+		{
+			if (snake_tails[i].x == apple->x && snake_tails[i].y == apple->y)
+			{
+				continue;
+			} else { break; }
+		} }*/
+	// Thanks chatgpt
+	while (1)
+	{
+		overlap = 0;
+
+		apple->x = rand() % (jail - 2) + 1;
+		apple->y = rand() % (jail - 2) + 1;
+
+		for (i = 1; i <= apple->cnt; i++)
+		{
+			if (snake_tails[i].x == apple->x &&
+				snake_tails[i].y == apple->y)
+			{
+				overlap = 1;
+				break;
+			}
+		}
+
+		if (!overlap)
+		{
+			break;
+		}
+	}
+
 	MoveCursor(apple->x, apple->y);
 	putc(8, stdout);
-	apple->x = rand() % 10;
-	apple->y = rand() % 10;
 }
 
-void UpdateSnake(POINT *snake, unsigned char ch)
+void UpdateSnake(POINT *snake, unsigned char ch, int *facing)
 {
 	switch(ch)
 	{
@@ -135,25 +189,30 @@ void UpdateSnake(POINT *snake, unsigned char ch)
 		break;		*/
 	case 27:
 		ExitProcess(0);
-	case UP:
+	case DOWN:
 		if (snake->y == 0) { break; }
-	
-		snake->y--;
+		snake->y++;
+		*facing = UP;
+
 		break;
 	
-	case DOWN:
+	case UP:
+		snake->y--;
+		*facing = DOWN;
 
-		snake->y++;
 		break;
 				
 	case RIGHT:
 		snake->x++;
+		*facing = RIGHT;
+	
 		break;
 				
 	case LEFT:
 		if (snake->x == 0) { break; }
-				
 		snake->x--;
+		*facing = LEFT;		
+		
 		break;
 	default:
 		return;
@@ -186,4 +245,25 @@ void RemoveTail(POINT snake_tails[100], APPLE *apple)
 	int i = apple->cnt;
 	MoveCursor(snake_tails[i].x , snake_tails[i].y);
 	printf(" ");
+}
+
+void GameOver()
+{
+	printf("Game Over\n");
+	ExitProcess(0);
+}
+
+void DrawJail(int jail)
+{
+	int i;	
+
+	MoveCursor(0,0);
+	for (i = 0; i < jail; i++) {printf("#");}
+
+	for (i=1; i < jail-1; i++) {
+	MoveCursor(jail, i);
+	printf("#"); }
+
+	printf("\n");
+	for (i = 0; i < jail; i++) {printf("#");}
 }

@@ -22,3 +22,6 @@ you can see high score, and this game have way to win!! Get apples up to a count
 
 
 todo - Highscore file with player name now I will go to have lunch
+
+2026-08-08-AM-11:19
+Highscore is DONE

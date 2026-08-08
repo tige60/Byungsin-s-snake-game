@@ -32,18 +32,21 @@ void RemoveTail(POINT snake_tails[100], APPLE *apple);
 
 int IsSnakeEatApple(APPLE apple, POINT snake);
 
-void GameOver(int how);
+void GameOver(FILE *fp, APPLE apple, int how);
 
 HANDLE hwd;
 
 int main(char argc, char* argv[])
 {
+	char name[10] =  { 0 };
 	// I hate Mathematics
 	int difficulty = 200 - (atoi(argv[2]) * 10);
 	int jail = atoi(argv[1]);
 	int facing = RIGHT;
 	unsigned char ch = RIGHT;
 	int i;
+
+	FILE *fp;
 
 	hwd = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -63,15 +66,19 @@ int main(char argc, char* argv[])
 
 	srand(time(NULL));
 
-	// wait "any key" (pause)
-	getch();
+	fp = fopen("highscore", "a");
+
+	printf("Your name: ");
+	scanf("%s", name);
+
+	fprintf(fp, "%s ", name);
 
 	system("cls");
 
 	DrawJail(jail);
 	while(1)
 	{
-		if (apple.cnt == (jail*jail - 10)) { GameOver(0); }
+		if (apple.cnt == (jail*jail - 10)) { GameOver(fp, apple, 0); }
 		//Let's make to auto move!
 		Sleep(difficulty);
 
@@ -114,18 +121,18 @@ int main(char argc, char* argv[])
 			{
 				if (snake_tails[i].x == snake.x && snake_tails[i].y == snake.y)
 				{
-					GameOver(1);
+					GameOver(fp, apple, 1);
 				}
 			}
 
 			// IDK why cause a problem at ceiling so snake.y < 1
 			if (snake.x < 0 || snake.y < 1)
 			{
-				GameOver(1);
+				GameOver(fp, apple, 1);
 			}
 
-			if (snake.x >= jail) { GameOver(1); }
-			if ((snake.y+1) >= jail) { GameOver(1); }
+			if (snake.x >= jail) { GameOver(fp, apple, 1); }
+			if ((snake.y+1) >= jail) { GameOver(fp, apple, 1); }
 
 			DrawSnake(&snake, ch); 
 			RemoveTail(snake_tails, &apple);
@@ -259,14 +266,18 @@ void RemoveTail(POINT snake_tails[100], APPLE *apple)
 	printf(" ");
 }
 
-void GameOver(int how)
+void GameOver(FILE *fp, APPLE apple, int how)
 {
+	fprintf(fp, "%d\n", apple.cnt);
+
 	if (how == 1) {
-	printf("Game Over\n");
-	ExitProcess(0); } else {
+		printf("Game Over\n");
+	} else {
 		printf("You Win!!!\n");
-		ExitProcess(0);
-		}
+	}
+
+	fclose(fp);
+	ExitProcess(0);
 }
 
 void DrawJail(int jail)
